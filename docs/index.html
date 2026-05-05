@@ -19,16 +19,6 @@
       align-items: center;
       gap: 0.45rem;
       padding: 0.65rem 1.35rem;
-      font-size: 0.95rem;
-      font-weight: 600;
-      letter-spacing: -0.01em;
-      border-radius: var(--radius, 6px);
-      border: 2px solid var(--color-primary);
-      background: var(--color-primary);
-      color: var(--color-primary-text);
-      cursor: pointer;
-      transition: background 0.15s, border-color 0.15s;
-      font-family: inherit;
     }
     print-element-button > button:hover {
       background: var(--color-secondary);
@@ -72,7 +62,10 @@
     }
 
     /* ── Stapler page background ─────────────────────────────────────────── */
-    s-page { background: white; }
+    s-page-body { 
+      background: white; 
+      color: #222;
+    }
 
     /* ── Page header / footer inside stapled-doc ──────────────────────────── */
     .doc-hf {
