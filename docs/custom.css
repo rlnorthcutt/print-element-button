@@ -1,0 +1,567 @@
+/*!
+ * stapled-doc-steel.css — Ivy.css custom palette theme
+ *
+ * Light palette:  #1A1A2E (Navy) · #40405E (Muted) · #80CAFF (Sky) · #F3F4F6 (Steel)
+ * Dark palette:   #1A1A2E (Deep) · #2D3748 (Slate) · #60A5FA (Blue) · #E5E7EB (Silver)
+ *
+ * Mapping strategy:
+ * 1st  → primary (the dark navy backbone)
+ * 2nd  → secondary (muted professional tones)
+ * 3rd  → links & interactive accents (the "highlight" blue)
+ * 4th  → borders & surfaces (metallic silver/steel)
+ */
+
+/* =============================================================================
+   LIGHT PALETTE (Navy · Muted · Sky · Steel)
+   ============================================================================= */
+:root {
+
+  /* — Primary: Stapled Navy — 
+     The foundational color of the brand. Professional and heavy. */
+  --color-primary-light:        #1A1A2E;
+  --color-primary-text-light:   #ffffff;
+
+  /* — Secondary: Muted Slate — 
+     Softens the navy for UI components that shouldn't shout. */
+  --color-secondary-light:      #40405E;
+  --color-secondary-text-light: #ffffff;
+
+  /* — Links: Sky Blue — 
+     Matches the "sheets" in the logo. Passes AA contrast on white. */
+  --color-link-light:           #1D70B8; /* Slightly darkened Sky for accessibility */
+
+  /* — Muted: Steel Blue Blend — 
+     Helper text that feels like technical drafting notes. */
+  --color-muted-light:          color-mix(in oklab, #1A1A2E 40%, #6b7280);
+
+  /* — Border: Metallic Silver — 
+     Mimics the staple itself. Clean, thin lines. */
+  --color-border-light:          color-mix(in oklab, #1A1A2E 15%, #d1d5db);
+
+  /* — Surface: Blueprint Wash — 
+     A very faint cool-grey tint for cards and code blocks. */
+  --color-surface-light:        color-mix(in oklab, #80CAFF 6%, #ffffff);
+
+  /* — Surface 2 & 3: Elevation Tiers — */
+  --surface-2-light:            color-mix(in oklab, #80CAFF 12%, #ffffff);
+  --surface-3-light:            color-mix(in oklab, #1A1A2E 5%, #f3f4f6);
+}
+
+/* =============================================================================
+   DARK PALETTE (Deep Navy · Slate · Bright Blue · Silver)
+   ============================================================================= */
+:root {
+
+  /* — Primary: Deep Navy — 
+     The darkest brand color as the primary surface anchor. */
+  --color-primary-dark:          #1A1A2E;
+  --color-primary-text-dark:     #E5E7EB; /* Silver text */
+
+  /* — Secondary: Blueprint Blue — 
+     Used for buttons and active states in dark mode. */
+  --color-secondary-dark:        #2563EB;
+  --color-secondary-text-dark:   #ffffff;
+
+  /* — Links: Electric Blue — 
+     High visibility against the dark navy background. */
+  --color-link-dark:             #60A5FA;
+
+  /* — Muted: Desaturated Navy — */
+  --color-muted-dark:            color-mix(in oklab, #60A5FA 30%, #94a3b8);
+
+  /* — Border: Silver Staple — 
+     Low-opacity metallic borders for a "contained" feel. */
+  --color-border-dark:           color-mix(in oklab, #E5E7EB 20%, transparent);
+
+  /* — Surface: Midnight Blue Floor — 
+     The Ivy dark base mixed with our brand navy. */
+  --color-surface-dark:          color-mix(in oklab, #1A1A2E 25%, #0f172a);
+
+  /* — Surface 2 & 3: Progressive Depth — */
+  --surface-2-dark:              color-mix(in oklab, #1A1A2E 40%, #1e293b);
+  --surface-3-dark:              color-mix(in oklab, #60A5FA 10%, #1e293b);
+}
+
+/* =============================================================================
+   SEMANTIC STATE OVERRIDES
+   ============================================================================= */
+:root {
+  /* Info: Matches the Sky Blue "Pages" color */
+  --info:    #80CAFF;
+  /* Success: Forest green with a hint of navy */
+  --success: color-mix(in oklab, #1A1A2E 15%, #10b981);
+  /* Warn: Bright "Warning Tape" yellow */
+  --warn:    #facc15;
+  /* Danger: Industrial red */
+  --danger:  color-mix(in oklab, #1A1A2E 10%, #ef4444);
+}
+
+/* =============================================================================
+   SITE CHROME — sticky nav header
+   ============================================================================= */
+
+body > header.site-header {
+  padding: 0;
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  background: color-mix(in oklab, var(--color-bg) 94%, transparent);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border-bottom: 1px solid var(--color-border);
+}
+
+.site-header nav {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  max-width: 72rem;
+  margin: 0 auto;
+  padding: 0.65rem 1.5rem;
+  margin-bottom: 0;
+}
+
+.site-header nav ul {
+  gap: 0.25rem;
+}
+
+.nav-brand {
+  font-weight: 700;
+  font-size: 1rem;
+  text-decoration: none;
+  color: var(--color-text);
+  letter-spacing: -0.02em;
+  white-space: nowrap;
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.nav-brand:hover {
+  text-decoration: none;
+}
+
+.nav-brand img {
+  width: 1.25rem;
+  height: 1.25rem;
+  flex-shrink: 0;
+}
+
+/* =============================================================================
+   SITE MAIN — remove ivy's max-width on the homepage wrapper
+   ============================================================================= */
+
+body > main.site-main {
+  max-width: none;
+  margin: 0;
+  padding: 0;
+}
+
+/* =============================================================================
+   HERO
+   ============================================================================= */
+
+.hero {
+  padding: 6rem 1.5rem 5rem;
+  text-align: center;
+  background: var(--color-primary);
+  color: var(--color-primary-text);
+}
+
+.hero h1,
+.hero h2,
+.hero h3 {
+  color: var(--color-primary-text);
+}
+
+.hero-sub {
+  font-size: clamp(1rem, 1.5vw, 1.2rem);
+  max-width: 44rem;
+  margin: 0 auto var(--space-xl);
+  opacity: 0.85;
+}
+
+.hero .btn-group {
+  justify-content: center;
+  margin-bottom: 0;
+}
+
+.hero [data-variant="outline"] {
+  color: var(--color-primary-text);
+  border-color: color-mix(in oklab, var(--color-primary-text) 50%, transparent);
+}
+
+.hero [data-variant="outline"]:hover {
+  background: color-mix(in oklab, var(--color-primary-text) 12%, transparent);
+  border-color: color-mix(in oklab, var(--color-primary-text) 70%, transparent);
+}
+
+/* =============================================================================
+   FULL-BLEED CONTENT SECTIONS
+   ============================================================================= */
+
+.section-full {
+  padding: 5rem 1.5rem;
+}
+
+.section-inner {
+  max-width: 72rem;
+  margin: 0 auto;
+}
+
+.section-header {
+  text-align: center;
+  max-width: 44rem;
+  margin: 0 auto 3rem;
+}
+
+.section-header h2 {
+  margin-top: 0;
+}
+
+.section-header p {
+  color: var(--color-muted);
+  font-size: 1.05rem;
+}
+
+/* =============================================================================
+   PROBLEM SECTION — the hook
+   ============================================================================= */
+
+.problem-statement {
+  font-size: clamp(1.1rem, 2vw, 1.4rem);
+  line-height: 1.7;
+  max-width: 42rem;
+  margin: 0 auto;
+  text-align: center;
+  color: var(--color-text);
+  border-left: none;
+  padding-left: 0;
+  font-style: normal;
+}
+
+/* =============================================================================
+   THREE PILLARS
+   ============================================================================= */
+
+.pillar-icon {
+  display: block;
+  font-size: 2rem;
+  margin-bottom: 0.75rem;
+  line-height: 1;
+}
+
+/* =============================================================================
+   CTA SECTION
+   ============================================================================= */
+
+.cta-section {
+  background: var(--color-primary);
+  color: var(--color-primary-text);
+  text-align: center;
+}
+
+.cta-section h2 {
+  color: var(--color-primary-text);
+  margin-top: 0;
+}
+
+.cta-section p {
+  opacity: 0.8;
+  max-width: 36rem;
+  margin: 0 auto var(--space-xl);
+}
+
+.cta-section .btn-group {
+  justify-content: center;
+  margin-bottom: 0;
+}
+
+.cta-section [data-variant="outline"] {
+  color: var(--color-primary-text);
+  border-color: color-mix(in oklab, var(--color-primary-text) 50%, transparent);
+}
+
+.cta-section [data-variant="outline"]:hover {
+  background: color-mix(in oklab, var(--color-primary-text) 12%, transparent);
+  border-color: color-mix(in oklab, var(--color-primary-text) 70%, transparent);
+}
+
+/* =============================================================================
+   SITE FOOTER
+   ============================================================================= */
+
+body > footer.site-footer {
+  border-top: 1px solid var(--color-border);
+  text-align: center;
+  color: var(--color-muted);
+  font-size: var(--fs-sm);
+}
+
+body > footer.site-footer p {
+  margin: 0;
+}
+
+/* =============================================================================
+   DOCS PAGE — sidebar layout
+   ============================================================================= */
+
+.docs-layout {
+  display: grid;
+  grid-template-columns: 14rem 1fr;
+  gap: 3rem;
+  max-width: 72rem;
+  margin: 0 auto;
+  padding: 2.5rem 1.5rem;
+  align-items: start;
+}
+
+@media (max-width: 48rem) {
+  .docs-layout {
+    grid-template-columns: 1fr;
+  }
+
+  .docs-sidebar {
+    display: none;
+  }
+}
+
+.docs-sidebar {
+  position: sticky;
+  top: 4.5rem;
+}
+
+.docs-sidebar nav {
+  margin: 0;
+}
+
+.docs-sidebar nav ul {
+  flex-direction: column;
+  gap: 0;
+}
+
+.docs-sidebar nav ul {
+  align-items: start;
+  margin-left: 1rem;
+}
+
+.docs-sidebar nav a {
+  display: block;
+  padding: 0.3rem 0.6rem;
+  border-radius: var(--radius-sm);
+  font-size: var(--fs-sm);
+  color: var(--color-text);
+}
+
+.docs-sidebar nav a:hover {
+  background: var(--surface-2);
+  text-decoration: none;
+}
+
+.docs-sidebar .sidebar-label {
+  display: block;
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--color-muted);
+  padding: 0.85rem 0.6rem 0.2rem;
+}
+
+.docs-content {
+  min-width: 0;
+}
+
+.docs-content h2 {
+  padding-top: 2.5rem;
+  margin-top: 2.5rem;
+  border-top: 1px solid var(--color-border);
+}
+
+.docs-content h2:first-child {
+  padding-top: 0;
+  margin-top: 0;
+  border-top: none;
+}
+
+/* =============================================================================
+   HERO LOGO
+   ============================================================================= */
+
+.hero-logo {
+  width: 120px;
+  height: 120px;
+  margin-bottom: 2rem;
+}
+
+/* =============================================================================
+   DEMOS LISTING PAGE
+   ============================================================================= */
+
+.demo-card-list {
+  list-style: none;
+  padding: 0;
+  margin: 0.5rem 0 0;
+}
+
+.demo-card-list li {
+  padding: 0.2rem 0;
+  font-size: 0.875rem;
+}
+
+/* ── Demo listing cards — interactive, whole-card click ─────────────────── */
+
+.demo-card {
+  position: relative;
+  cursor: pointer;
+  transition: transform 0.18s ease, box-shadow 0.18s ease;
+}
+
+.demo-card h3 {
+  transition: color 0.18s ease;
+}
+
+.demo-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 16px 40px rgba(26, 26, 46, 0.14);
+}
+
+.demo-card:hover h3 {
+  color: var(--color-link);
+}
+
+/* Stretched link — ::after covers the whole card via position:relative on .demo-card */
+.demo-card footer a[role="button"]::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+}
+
+/* =============================================================================
+   INDIVIDUAL DEMO PAGE
+   ============================================================================= */
+
+.demo-header {
+  max-width: 52rem;
+  margin: 0 auto;
+  padding: 3rem 2rem 1.5rem;
+}
+
+.demo-breadcrumb {
+  margin-bottom: 1rem;
+  font-size: 0.875rem;
+}
+
+.demo-controls {
+  display: flex;
+  justify-content: flex-end;
+  max-width: 52rem;
+  margin: 0 auto;
+  padding: 0 2rem 1rem;
+}
+
+.demo-stage {
+  background: var(--surface-2);
+  border-top: 1px solid var(--color-border);
+  border-bottom: 1px solid var(--color-border);
+  padding: 2rem 1rem 3rem;
+  overflow-x: auto;
+}
+
+.demo-iframe {
+  display: block;
+  width: 100%;
+  max-width: 52rem;
+  margin: 0 auto;
+  border: none;
+  min-height: 900px;
+}
+
+/* =============================================================================
+   SAMPLES PAGE
+   ============================================================================= */
+
+.sample-wrapper {
+  padding-bottom: 4rem;
+  margin-bottom: 4rem;
+  border-bottom: 1px solid var(--color-border);
+}
+
+.sample-wrapper:last-child {
+  border-bottom: none;
+  margin-bottom: 0;
+  padding-bottom: 0;
+}
+
+.sample-meta {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 1.5rem;
+  flex-wrap: wrap;
+  gap: 1rem;
+}
+
+.sample-meta h2 {
+  margin: 0;
+}
+
+.sample-meta p {
+  margin: 0.25rem 0 0;
+}
+
+.sample-preview {
+  overflow-x: auto;
+  padding-bottom: 0.5rem;
+}
+
+.sample-blueprint {
+  display: none;
+}
+
+.sample-wrapper.show-blueprint .sample-blueprint {
+  display: block;
+}
+
+.sample-wrapper.show-blueprint .sample-preview {
+  display: none;
+}
+
+.sample-blueprint pre {
+  max-height: 40rem;
+  overflow-y: auto;
+  font-size: 0.78rem;
+}
+
+/* =============================================================================
+   ABOUT PAGE
+   ============================================================================= */
+
+.about-hero {
+  padding: 5rem 1.5rem 4rem;
+  text-align: center;
+  background: var(--surface-2);
+  border-bottom: 1px solid var(--color-border);
+}
+
+.stapler-display {
+  width: 14rem;
+  height: auto;
+  margin: 0 auto 1.5rem;
+  color: var(--color-text);
+  opacity: 0.8;
+}
+
+.about-content {
+  max-width: 42rem;
+  margin: 0 auto;
+  padding: 3rem 1.5rem;
+}
+
+.about-content h2 {
+  margin-top: 2rem;
+}
+
+.about-content h2:first-child {
+  margin-top: 0;
+}
