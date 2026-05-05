@@ -10,22 +10,38 @@ export function serializeAdopted(sheets) {
   }).join('\n');
 }
 
+// Collects every open shadow root reachable from `el` so getHTML() can
+// serialize them regardless of whether they were created with serializable:true.
+function collectShadowRoots(el, acc = []) {
+  if (el.shadowRoot) acc.push(el.shadowRoot);
+  el.querySelectorAll('*').forEach(child => {
+    if (child.shadowRoot) collectShadowRoots(child, acc);
+  });
+  return acc;
+}
+
 function buildPrintDocument(target, options = {}) {
   const {
     pageSize = 'letter',
     margins = '0',
-    title = '',
+    printTitle = '',
   } = options;
 
   const docClone = document.documentElement.cloneNode(true);
   docClone.querySelectorAll('script').forEach(el => el.remove());
 
-  const targetHTML = target.getHTML?.({ serializableShadowRoots: true }) ?? target.outerHTML;
+  const shadowRoots = collectShadowRoots(target);
+  const targetHTML = target.getHTML?.({ serializableShadowRoots: true, shadowRoots }) ?? target.outerHTML;
   const body = docClone.querySelector('body');
   body.innerHTML = targetHTML;
   body.querySelectorAll('img[loading="lazy"]').forEach(img => img.setAttribute('loading', 'eager'));
 
   const head = docClone.querySelector('head');
+
+  // Reset browser default body margin so @page margin is the only offset.
+  const resetStyle = document.createElement('style');
+  resetStyle.textContent = 'html,body{margin:0;padding:0;background:white;}';
+  head.appendChild(resetStyle);
 
   const pageStyle = document.createElement('style');
   pageStyle.textContent = `@page { size: ${pageSize}; margin: ${margins}; }`;
@@ -42,13 +58,13 @@ function buildPrintDocument(target, options = {}) {
     head.appendChild(adoptedStyle);
   }
 
-  if (title) {
+  if (printTitle) {
     let titleEl = head.querySelector('title');
     if (!titleEl) {
       titleEl = document.createElement('title');
       head.appendChild(titleEl);
     }
-    titleEl.textContent = title;
+    titleEl.textContent = printTitle;
   }
 
   return '<!DOCTYPE html>\n' + docClone.outerHTML;
@@ -72,9 +88,14 @@ class PrintElementButton extends HTMLElement {
 
   connectedCallback() {
     if (!this.contains(this.#btn)) {
-      // Move any existing light-DOM children (label content) into the button.
+      // Move light-DOM children into the button, ignoring whitespace-only text nodes
+      // so <print-element-button>   </print-element-button> keeps the default label.
       const children = [...this.childNodes];
-      if (children.length > 0) {
+      const hasMeaningful = children.some(n =>
+        n.nodeType === Node.ELEMENT_NODE ||
+        (n.nodeType === Node.TEXT_NODE && n.textContent.trim())
+      );
+      if (hasMeaningful) {
         this.#btn.textContent = '';
         children.forEach(n => this.#btn.appendChild(n));
       }
@@ -135,18 +156,20 @@ class PrintElementButton extends HTMLElement {
       const html = buildPrintDocument(target, {
         pageSize: this.getAttribute('page-size') ?? 'letter',
         margins: this.getAttribute('margins') ?? '0',
-        title: this.getAttribute('title') ?? '',
+        printTitle: this.getAttribute('print-title') ?? '',
       });
 
       iframe = document.createElement('iframe');
       iframe.setAttribute('aria-hidden', 'true');
       iframe.style.cssText = 'position:fixed;left:-10000px;width:1px;height:1px;border:0;opacity:0;';
-      document.body.appendChild(iframe);
+      // Set srcdoc before appending so the browser skips the about:blank navigation
+      // and fires exactly one load event (for the srcdoc content).
+      iframe.srcdoc = html;
 
       await new Promise((resolve, reject) => {
         signal.addEventListener('abort', () => reject(new DOMException('Aborted', 'AbortError')));
         iframe.addEventListener('load', resolve, { once: true });
-        iframe.srcdoc = html;
+        document.body.appendChild(iframe);
       });
 
       if (signal.aborted) return;
@@ -154,7 +177,12 @@ class PrintElementButton extends HTMLElement {
       const iframeDoc = iframe.contentDocument;
       const iframeWin = iframe.contentWindow;
 
-      await iframeDoc.fonts.ready;
+      // Race fonts.ready against a 10 s cap so a stalled font load can't hang
+      // print prep indefinitely (the 60 s timeout only covers the dialog phase).
+      await Promise.race([
+        iframeDoc.fonts.ready,
+        new Promise(r => setTimeout(r, 10_000)),
+      ]);
       await Promise.all([...iframeDoc.querySelectorAll('img')].map(img =>
         img.decode().catch(() => null)
       ));

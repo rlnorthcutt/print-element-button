@@ -40,7 +40,7 @@ The content between the tags is the button label. Falls back to "Print" if empty
 | `target`    | parent element | CSS selector for the element to print. If omitted, uses `parentElement`. |
 | `page-size` | `letter`       | Passed to `@page { size: ... }`. Accepts `letter`, `legal`, `a4`, or explicit dimensions like `8.5in 11in`. |
 | `margins`   | `0`            | Passed to `@page { margin: ... }`. |
-| `title`     | page title     | Title shown in the print dialog and used as the default PDF filename. |
+| `print-title` | page title   | Title shown in the print dialog and used as the default PDF filename. |
 
 ## Methods
 
@@ -110,6 +110,7 @@ The component works on Safari 17.4+; shadow DOM content is simply not captured (
 - **Closed shadow roots** — `getHTML` only serializes open shadow roots (or those explicitly marked `serializable`). Use open shadow DOM.
 - **Viewport units in target styles** — `vh`/`vw` compute against the iframe viewport (1 px). Use absolute units (`in`, `cm`, `mm`) for page-dimension CSS.
 - **Lazy-loaded images** — `loading="lazy"` is automatically rewritten to `loading="eager"`, but images not yet fetched in the host page may still be absent.
+- **Mutating the label after connect** — set label content (text, SVG, etc.) before appending the element to the DOM. Setting `el.textContent` or `el.innerHTML` after the element is connected will overwrite the inner `<button>` and break the component. Access the button directly (`el.querySelector('button').textContent = 'New label'`) if you need to update it later.
 
 ## FAQ
 

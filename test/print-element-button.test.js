@@ -246,10 +246,25 @@ describe('PrintElementButton — document assembly', () => {
     expect(mockIframe.srcdoc).toContain('0.75in');
   });
 
-  it('sets the title element from the title attribute', () => {
-    el.setAttribute('title', 'My Report');
+  it('sets the title element from the print-title attribute', () => {
+    el.setAttribute('print-title', 'My Report');
     el.print();
     expect(mockIframe.srcdoc).toContain('<title>My Report</title>');
+  });
+
+  it('injects a body reset to suppress browser default margins', () => {
+    el.print();
+    expect(mockIframe.srcdoc).toContain('margin:0');
+    expect(mockIframe.srcdoc).toContain('background:white');
+  });
+
+  it('keeps the default label when children are whitespace only', () => {
+    const ws = document.createElement('print-element-button');
+    ws.setAttribute('target', '#asm-target');
+    ws.appendChild(document.createTextNode('   '));
+    document.body.appendChild(ws);
+    expect(ws.querySelector('button').textContent.trim()).toBe('🖨️ Print');
+    ws.remove();
   });
 
   it('rewrites lazy images to eager inside the target', () => {
@@ -502,11 +517,12 @@ describe('PrintElementButton — print flow', () => {
       el.addEventListener('print-end', e => events.push(e));
 
       el.print();
-      // fire load and flush the microtask chain (fonts.ready + img.decode + print-start)
+      // fire load and flush the microtask chain (fonts.ready race + img.decode + print-start)
       mockIframe.dispatchEvent(new Event('load'));
       await Promise.resolve();
       await Promise.resolve();
       await Promise.resolve();
+      await Promise.resolve(); // extra tick: Promise.race adds one hop vs a bare await
 
       vi.advanceTimersByTime(60_000);
       // timeout callback dispatches print-end synchronously
