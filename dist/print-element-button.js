@@ -1,4 +1,59 @@
-// Named exports for testing
+/**
+ * <print-element-button>
+ *
+ * A zero-dependency custom element that prints a single DOM element and its
+ * descendants in an isolated iframe, leaving the host page completely untouched.
+ *
+ * Basic usage:
+ *   <print-element-button target="#my-element">Print</print-element-button>
+ *
+ * Attributes:
+ *   target       – CSS selector for the element to print (default: parentElement).
+ *                  Resolved at click time, so late DOM changes are picked up automatically.
+ *   page-size    – Passed to @page { size }. Accepts "letter", "legal", "a4", or
+ *                  explicit dimensions like "8.5in 11in" (default: "letter").
+ *   margins      – Passed to @page { margin }. Any CSS length or shorthand,
+ *                  e.g. "0.75in" or "1in 0.5in" (default: "0").
+ *   print-title  – Title shown in the print dialog and used as the default PDF
+ *                  filename. Inherits the page title if omitted.
+ *   aria-label   – Forwarded to the inner <button>. Use this when the label is
+ *                  icon-only so screen readers have an accessible name.
+ *   class        – Forwarded to the inner <button>, so site button styles apply
+ *                  naturally: <print-element-button class="btn-primary">.
+ *
+ * Label:
+ *   Content between the tags becomes the button label. Whitespace-only content
+ *   is ignored and falls back to the default "🖨️ Print" label.
+ *   Important: set label content *before* appending to the DOM. To update it
+ *   after connect, target the inner button: el.querySelector('button').textContent.
+ *
+ * Methods:
+ *   print()   – Triggers the full print sequence. Returns a Promise that resolves
+ *               after the dialog closes (afterprint), or rejects with
+ *               DOMException('InvalidStateError') if already printing, or with an
+ *               Error if target resolution or iframe setup fails.
+ *   cancel()  – Aborts an in-flight print before the dialog opens. If called after
+ *               print-start has fired, print-end still fires to balance the lifecycle.
+ *
+ * Events (all bubble and are composed, so they cross shadow DOM boundaries):
+ *   print-start  – Fires once the iframe is ready and print() has been called on it.
+ *                  Every print-start is guaranteed exactly one matching print-end.
+ *   print-end    – Fires on afterprint, on the 60 s timeout, or when cancel() is
+ *                  called after print-start. detail: null normally; { timedOut: true }
+ *                  if the 60 s fallback fired.
+ *   print-error  – Fires if preparation fails. detail: { error: Error }.
+ */
+
+/**
+ * Serializes CSSStyleSheet objects (adoptedStyleSheets) to a plain CSS string.
+ *
+ * adoptedStyleSheets live outside the DOM tree and are invisible to cloneNode,
+ * so they must be walked and inlined manually into the print document.
+ * Cross-origin sheets throw SecurityError on cssRules access — those are caught
+ * and skipped because the cloned <link> tag will load them in the iframe anyway.
+ *
+ * Exported so the unit tests can exercise it directly.
+ */
 export function serializeAdopted(sheets) {
   if (!sheets?.length) return '';
   return [...sheets].map(sheet => {
@@ -10,8 +65,14 @@ export function serializeAdopted(sheets) {
   }).join('\n');
 }
 
-// Collects every open shadow root reachable from `el` so getHTML() can
-// serialize them regardless of whether they were created with serializable:true.
+/**
+ * Recursively collects every open shadow root reachable from `el`.
+ *
+ * Passed to getHTML({ shadowRoots }) so the browser serializes all open shadow
+ * roots regardless of whether they were created with { serializable: true }.
+ * Without this, only explicitly-serializable shadow roots would appear in the
+ * print output. Recursion into each shadow root handles shadow-in-shadow nesting.
+ */
 function collectShadowRoots(el, acc = []) {
   if (el.shadowRoot) {
     acc.push(el.shadowRoot);
@@ -23,6 +84,19 @@ function collectShadowRoots(el, acc = []) {
   return acc;
 }
 
+/**
+ * Builds the complete HTML string that will be loaded into the print iframe.
+ *
+ * The strategy: clone the live <html> element (which brings every <link> and
+ * <style> tag along for free), strip all scripts, replace <body> with only the
+ * serialized target content, then inject the @page rule and any adopted
+ * stylesheets that survive only as JavaScript objects and won't survive cloning.
+ *
+ * Scripts in the cloned head are stripped because they'd re-run in the iframe
+ * (analytics, component registrations, etc.) and we don't need them — shadow DOM
+ * is already captured statically by getHTML. Scripts that are part of the target
+ * element's own HTML are preserved for the outerHTML fallback path.
+ */
 function buildPrintDocument(target, options = {}) {
   const {
     pageSize = 'letter',
@@ -33,10 +107,15 @@ function buildPrintDocument(target, options = {}) {
   const docClone = document.documentElement.cloneNode(true);
   docClone.querySelectorAll('script').forEach(el => el.remove());
 
+  // Collect all shadow roots so getHTML can serialize them even if they were
+  // not created with { serializable: true }.
   const shadowRoots = collectShadowRoots(target);
   const targetHTML = target.getHTML?.({ serializableShadowRoots: true, shadowRoots }) ?? target.outerHTML;
   const body = docClone.querySelector('body');
   body.innerHTML = targetHTML;
+
+  // Lazy images never enter the viewport in an offscreen 1×1 iframe, so they
+  // would never load. Rewrite them eagerly before the iframe loads.
   body.querySelectorAll('img[loading="lazy"]').forEach(img => img.setAttribute('loading', 'eager'));
 
   const head = docClone.querySelector('head');
@@ -50,6 +129,8 @@ function buildPrintDocument(target, options = {}) {
   pageStyle.textContent = `@page { size: ${pageSize}; margin: ${margins}; }`;
   head.appendChild(pageStyle);
 
+  // adoptedStyleSheets are JS-only objects — they don't appear in the DOM and
+  // won't be captured by cloneNode. Serialize and inline them as <style> blocks.
   const adoptedCSS = [
     serializeAdopted(document.adoptedStyleSheets),
     serializeAdopted(target.shadowRoot?.adoptedStyleSheets),
@@ -73,6 +154,17 @@ function buildPrintDocument(target, options = {}) {
   return '<!DOCTYPE html>\n' + docClone.outerHTML;
 }
 
+/**
+ * The <print-element-button> custom element.
+ *
+ * Renders a <button> in the light DOM (no shadow root) so host-page CSS reaches
+ * it directly. Children between the tags become the button label; whitespace-only
+ * content falls back to "🖨️ Print".
+ *
+ * All printing happens inside a hidden 1×1 px iframe that is created per session
+ * and removed immediately after the dialog closes. The host page DOM is never
+ * mutated — no flicker, no scroll jump, no class toggling.
+ */
 class PrintElementButton extends HTMLElement {
   #printing = false;
   #abort = null;
@@ -117,6 +209,9 @@ class PrintElementButton extends HTMLElement {
     this.cancel();
   }
 
+  // Forward class and aria-label from the host element to the inner button.
+  // class lets site-wide button styles apply via <print-element-button class="...">.
+  // aria-label is needed when the label is icon-only and has no visible text.
   #syncClasses() {
     this.#btn.className = this.className;
     const label = this.getAttribute('aria-label');
@@ -132,7 +227,14 @@ class PrintElementButton extends HTMLElement {
     return sel ? document.querySelector(sel) : this.parentElement;
   }
 
+  /**
+   * Triggers the print sequence programmatically.
+   * Equivalent to clicking the button.
+   * @returns {Promise<void>} Resolves after the print dialog closes.
+   */
   print() {
+    // Guard against overlapping calls — the button is also disabled during printing,
+    // but programmatic callers can still call print() concurrently.
     if (this.#printing) {
       return Promise.reject(new DOMException('Print already in progress', 'InvalidStateError'));
     }
@@ -194,6 +296,8 @@ class PrintElementButton extends HTMLElement {
         iframeDoc.fonts.ready,
         new Promise(r => setTimeout(r, 10_000)),
       ]);
+      // Decode all images before printing so none appear blank. Rejections are
+      // swallowed — a broken image shouldn't prevent the rest from printing.
       await Promise.all([...iframeDoc.querySelectorAll('img')].map(img =>
         img.decode().catch(() => null)
       ));
@@ -210,6 +314,8 @@ class PrintElementButton extends HTMLElement {
         };
         signal.addEventListener('abort', onAbort, { once: true });
 
+        // 60 s fallback: afterprint doesn't fire in every environment (e.g. some
+        // headless browsers, aggressive popup blockers). This ensures cleanup always runs.
         const timeout = setTimeout(() => {
           signal.removeEventListener('abort', onAbort);
           this.dispatchEvent(new CustomEvent('print-end', {
@@ -228,6 +334,7 @@ class PrintElementButton extends HTMLElement {
         }, { once: true });
 
         try {
+          // focus() is required for Safari; harmless elsewhere.
           iframeWin.focus();
           iframeWin.print();
         } catch (err) {
@@ -238,6 +345,8 @@ class PrintElementButton extends HTMLElement {
       });
     } catch (err) {
       if (err.name === 'AbortError') {
+        // cancel() was called — if print-start already fired, emit print-end to
+        // keep the lifecycle balanced (every start has exactly one end).
         if (printStarted) {
           this.dispatchEvent(new CustomEvent('print-end', { bubbles: true, composed: true }));
         }
@@ -250,6 +359,10 @@ class PrintElementButton extends HTMLElement {
     }
   }
 
+  /**
+   * Aborts an in-flight print before the dialog opens.
+   * Safe to call at any time; a no-op if nothing is in progress.
+   */
   cancel() {
     this.#abort?.abort();
   }
