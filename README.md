@@ -12,16 +12,6 @@ Designed to pair with [`<stapler>`](https://github.com/rlnorthcutt/stapler) but 
 <script type="module" src="https://cdn.jsdelivr.net/gh/rlnorthcutt/print-element-button@main/dist/print-element-button.min.js"></script>
 ```
 
-### npm
-
-```bash
-npm install print-element-button
-```
-
-```js
-import 'print-element-button';
-```
-
 ### Local file
 
 Download [`print-element-button.js`](https://github.com/rlnorthcutt/print-element-button/raw/main/print-element-button.js) and serve it from your project:
@@ -177,3 +167,6 @@ Tests run in jsdom via [Vitest](https://vitest.dev). The component itself has no
 | `dist/print-element-button.min.js` | Minified ESM (≈ 4.4 kB) — used by CDN links |
 
 `dist/` is rebuilt automatically on every commit via the pre-commit hook.
+
+## TODO
+- Publish on NPM
