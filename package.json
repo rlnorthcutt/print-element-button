@@ -3,9 +3,13 @@
   "version": "1.0.0",
   "description": "Zero-dependency custom element that prints a single DOM element in an isolated iframe",
   "type": "module",
+  "files": ["print-element-button.js", "dist/"],
   "exports": {
-    ".": "./print-element-button.js"
+    ".": "./print-element-button.js",
+    "./min": "./dist/print-element-button.min.js"
   },
+  "unpkg": "dist/print-element-button.min.js",
+  "jsdelivr": "dist/print-element-button.min.js",
   "scripts": {
     "prepare": "git config core.hooksPath .githooks",
     "build": "mkdir -p dist && cp print-element-button.js dist/print-element-button.js && esbuild print-element-button.js --minify --format=esm --outfile=dist/print-element-button.min.js && cp dist/print-element-button.min.js docs/print-element-button.js",

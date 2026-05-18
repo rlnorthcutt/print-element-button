@@ -365,7 +365,7 @@ describe('PrintElementButton — print flow', () => {
     expect(events).toEqual(['print-start', 'print-end']);
   });
 
-  it('print-end detail is undefined on a normal close', async () => {
+  it('print-end detail is null on a normal close', async () => {
     let detail;
     el.addEventListener('print-end', e => { detail = e.detail; });
 

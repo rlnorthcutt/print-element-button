@@ -412,7 +412,7 @@
 &lt;print-element-button target="#my-document"
                       page-size="letter"
                       margins="0.75in"
-                      title="My Report"&gt;
+                      print-title="My Report"&gt;
   Print Document
 &lt;/print-element-button&gt;</code></pre>
                 <p class="pg-note">The button label is slotted — anything between the tags becomes the label. Falls back to "Print" if the element is empty.</p>
@@ -444,7 +444,7 @@
                       <td>Passed to <code>@page { margin }</code>. Accepts any CSS length value or shorthand, e.g. <code>0.75in</code> or <code>1in 0.5in</code>.</td>
                     </tr>
                     <tr>
-                      <td><code>title</code></td>
+                      <td><code>print-title</code></td>
                       <td><em>page title</em></td>
                       <td>Title shown in the print dialog and used as the default filename when saving as PDF. Inherits the current page title if omitted.</td>
                     </tr>
